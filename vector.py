@@ -27,8 +27,7 @@ def create_line(line):
     return masked_line, line_len
 
 
-def context_target(vector):
-    window = 2 # Small size for test
+def context_target(vector,window):
     rand = window*2
     data, line_data = [],[]
     test = 10
@@ -50,6 +49,7 @@ def context_target(vector):
 
 
 def convert_to_vec(lines, char_dict):
+    window = 2 # Change if needed
     dict_ = {'S':0,'E':1,'M':2,'U':3} # start, end, mask and unknown values
     for idx, val in enumerate(char_dict.keys()):
         dict_[val]=idx+4
@@ -62,14 +62,14 @@ def convert_to_vec(lines, char_dict):
         new_line, line_len = create_line(line) # With start, end and masked words
         new_line = [dict_[val] if val in dict_.keys() else dict_['U'] for val in new_line]
         #print(new_line) #sum_ += line_len
-        line_data = context_target(new_line) # Building false negatives where anything beyond window has target of 0 else 1
+        line_data = context_target(new_line, window) # Building false negatives where anything beyond window has target of 0 else 1
         for val in line_data:
             data.append(val)
-    return data, dict_
+    return data, dict_, window
 
 
 def build_char_data(lines,char_dict,test=False):
-    data, char_dict = convert_to_vec(lines, char_dict)
+    data, char_dict, window = convert_to_vec(lines, char_dict)
     if(test):
         data = data[:20]
-    return data
+    return data, window

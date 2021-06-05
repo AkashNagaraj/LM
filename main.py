@@ -3,38 +3,72 @@ from vector import *
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+
+import math
 
 
-def test_model(data, char_dict):
-    vocab_size = len(char_dict)
-    embedding_dim = 100
-    window = 2
-    context, target = [], []
-    for val in data:
-        c = val[:window]
-        t = val[window]
-        context.append(c)
-        target.append(c)
+class Skip_Gram(nn.Module):
+    def __init__(self, vocab_size, embedding_size, context_size):
+        super(Skip_Gram,self).__init__()
+        self.embeddings = nn.Embedding(vocab_size, embedding_size)
+        self.linear1 = nn.Linear(context_size*embedding_size, 128)
+        self.linear2 = nn.Linear(128, vocab_size)
 
-    embeddings = nn.Embedding(vocab_size*window,embedding_dim)
-    weihts = torch.randn((vocab_size,embedding_dim), requires_grad=True)
+    def forward(self,inputs):
+        embeds = self.embeddings(inputs).view((1,-1)) # inputs:[1,2,3,4] or [[1,2,3,4]]
+        out = F.relu(self.linear1(embeds))
+        out = F.sigmoid(self.linear(out))
+        log_probs = F.log_softmax(out,dim=1)
+        return log_probs
+
+        
+
+def train_model(data, vocab_size, window):
+    losses = []
+    loss_function = nn.NLLLoss()
+    embedding_size = 100
+    context_size = window*2
+    model = Skip_Gram(len(vocab_size), 100, context_size)
+    optimizer = optim.SGD(model.parameters(), lr=0.0001)
+
+    for epoch in range(10):
+        total_loss = 0
+        for val in data:
+            print(val)
+            #context_idx = torch.tensor(c, dtype=torch.long) # Need to be changed
+    """
+            target_idx = torch.tensor(t, dtype=torch.long) # Need to be changed
+            model.zero_grad()
+            log_probs = model(context_idx)
+            loss = loss_function(log_probs)
+            loss.backward()
+            optimizer.step()
+            total_loss += loss.item()
+        losses.append(total_loss)
+    print(losses)
+    """
+
+
+def build_batch(data, split_data):
+    t = [data[i][0][0] for i in range(0,len(data))]
+    c = [data[i][1][0] for i in range(0,len(data))]
+    l = [data[i][2][0] for i in range(0,len(data))]
     
-    x = embeddings.weight[3:5]
-    new_x = torch.cat(x,1)
-    print(new_x)
-    """
-    w = weights[idx]
-    out = torch.matmul(w,x)
-    non_linear_out = nn.Sigmoid()
-    print(out)
-    print(non_linear_out(out))
-    """
+    targets = [t[i:i+split_data] if i+split_data<=len(data) else t[i:] for i in range(0,len(data),split_data)]
+    context = [t[i:i+split_data] if i+split_data<=len(data) else t[i:] for i in range(0,len(data),split_data)]
+    labels = [t[i:i+split_data] if i+split_data<=len(data) else t[i:] for i in range(0,len(data),split_data)]
+
+    #return targets, context, labels
 
 
 def main():
     lines , freq_count, char_dict = choose_sentences() # Choose 1000 sentences with most chars and highest char frequency 
-    embedding_ch = build_char_data(lines, char_dict, test=True) # 10% masked 
-    test_model(embedding_ch, char_dict)
+    data_vector, window = build_char_data(lines, char_dict, test=True) # 10% masked 
+    split = 10
+    data = build_batch(data_vector,split)  
+    #train_model(data_vector, char_dict, window)
     """
     #build_word_embedding() 
     new_embedding_ch = self_attention(embedding_ch)
