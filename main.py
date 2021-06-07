@@ -31,25 +31,24 @@ class Skip_Gram(nn.Module):
         return comb
 
 
-def train_model(data, vocab_size, window):
+def train_model(data, vocab_size, embedding_size, context_size, device):
     losses = []
     loss_function = nn.NLLLoss()
-    embedding_size = 100
-    context_size = 10 # Currently choosing 10
-    model = Skip_Gram(len(vocab_size), 100, context_size)
+    
+    model = Skip_Gram(len(vocab_size), embedding_size, context_size).to(device)
     optimizer = optim.SGD(model.parameters(), lr=0.0001)
 
     for epoch in range(10):
         total_loss = 0
         for mini_batch in data:
-            target = torch.tensor(mini_batch[0], dtype=torch.long)
-            context = torch.tensor([mini_batch[1]], dtype=torch.long) 
-            labels = torch.tensor([mini_batch[2]], dtype=torch.long) 
+            target = torch.tensor(mini_batch[0], dtype=torch.long).to(device)
+            context = torch.tensor([mini_batch[1]], dtype=torch.long).to(device)
+            labels = torch.tensor([mini_batch[2]], dtype=torch.long).to(device) 
             
             model.zero_grad()
             # Learn Embedding 
             target_loss = model.forward_embedding(target) 
-            context_loss = model.forward_embedding(context)
+            #context_loss = model.forward_embedding(context)
             # Combine target and context embedding to one
             combine_embeddings = model.combine_embedding(target, context)
             # Pass through CNN
@@ -79,10 +78,17 @@ def build_batch(data, split_data):
 
 def main():
     lines , freq_count, dict_ = choose_sentences() # Choose 1000 sentences with most chars and highest char frequency 
-    data_vector, char_dict, window = build_char_data(lines, dict_, test=True) # 10% masked 
-    split = 10
-    data = build_batch(data_vector,split)  
-    train_model(data, char_dict, window)
+    data_vector, char_dict, window = build_char_data(lines, dict_, test=False) # 10% masked 
+
+    batch_size = 10
+    remainder = len(data_vector)%batch_size
+    padding_data = [([char_dict['S']],[char_dict['E']],[0]) for i in range(0,abs(batch_size-remainder))]
+    data_vector = data_vector + padding_data
+    data = build_batch(data_vector,batch_size)  
+
+    embed_size = 100
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    train_model(data, char_dict, embed_size, batch_size, device)
     """
     #build_word_embedding() 
     new_embedding_ch = self_attention(embedding_ch)
