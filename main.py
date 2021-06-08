@@ -7,39 +7,42 @@ def train_model(data, vocab_size, embedding_size, context_size, device):
     losses = []
     loss_function = nn.NLLLoss()
 
-    model = Skip_Gram(len(vocab_size), embedding_size, context_size).to(device)
+    model = Embedding_Attention(len(vocab_size), embedding_size, context_size, 1).to(device)
     optimizer = optim.SGD(model.parameters(), lr=0.0001)
 
     for epoch in range(10):
         total_loss = 0
         for mini_batch in data:
             target = torch.tensor(mini_batch[0], dtype=torch.long).to(device)
-            context = torch.tensor([mini_batch[1]], dtype=torch.long).to(device)
+            context = torch.tensor(mini_batch[1], dtype=torch.long).to(device)
             labels = torch.tensor(mini_batch[2], dtype=torch.long).to(device)
 
             model.zero_grad()
             # ==== Learn Embedding ==== # 
-            # target_loss = model.forward_embedding(target).to(device)
-            # context_loss = model.forward_embedding(context).to(device)
-            
-            # ==== Combine target and context embedding by Hamadard Product ==== #
+            target_loss = model.forward_embedding(target).to(device)
+            context_loss = model.forward_embedding(context).to(device)  
+            # ==== Matrix for CNN ==== #
             combine_embeddings = model.combine_embedding(target, context).to(device)
-            # print(combine_embeddings.data.shape)
-            
-            # ==== Self attention of combine embeddings ==== #
-            self_attn = torch.matmul(combine_embeddings, torch.transpose(combine_embeddings, 0, 1)) 
-            #print(self_attn.data.shape)
-            #loss = loss_function(self_attn,labels)
-            #print(torch.exp(loss)) # Get probability
-            
-            # ==== CNN ==== #
-            
+            matrix = torch.matmul(combine_embeddings, torch.transpose(combine_embeddings, 0, 1)).reshape(1, 1, context_size, context_size).to(device) # Square matrix of embeddings
+            cnn_loss = model.cnn_forward(matrix).to(device)
 
+            # ===== Loss Function ==== #
+            #print("cnn_loss:{}, target_loss:{}, context_loss:{}".format(cnn_loss.data.shape,target_loss.data.shape,context_loss.data.shape))
+            total_loss = cnn_loss + target_loss + context_loss
+            epoch_loss = loss_function(total_loss, labels)
+            epoch_loss.backward()
+            optimizer.step()
+            print(epoch_loss.item())
     """
-            loss = loss_function(log_probs,torch.tensor([np.arange(28)],dtype=torch.long)) # labels
+            # ==== Self attention of combine embeddings ==== #
+            out = model.attention(target).to(device)
+            e_ij = torch.matmul(combine_embeddings, torch.transpose(combine_embeddings, 0, 1)).to(device) # Assuming encoder decoder sequence is the same?  
+            soft = nn.Softmax(dim=1).to(device) -> a_ij = soft(e_ij).to(device)
+            loss = loss_function(log_probs,labels) 
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
+            print(total_loss)
         losses.append(total_loss)
     print(losses)
     """
@@ -55,7 +58,7 @@ def main():
     data_vector = data_vector + padding_data
     data = build_batch(data_vector,batch_size)  
 
-    embed_size = 100
+    embed_size = 150
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     train_model(data, char_dict, embed_size, batch_size, device)
     """
