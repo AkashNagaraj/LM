@@ -15,7 +15,7 @@ class Embedding_Attention(nn.Module):
         self.vocab_size = vocab_size
         self.embeddings = nn.Embedding(vocab_size, emb_dim)
         self.linear1 = nn.Linear(cont_size*emb_dim, 128)
-        self.linear2 = nn.Linear(128, 10) # Vocab_size
+        self.linear2 = nn.Linear(128, 40) # 40 = batch_size * n_class
 
 
         # ===== CNN Layer ===== #
@@ -28,9 +28,9 @@ class Embedding_Attention(nn.Module):
         self.batchnorm2 = nn.BatchNorm2d(8)
         self.maxpool2 = nn.MaxPool2d(kernel_size = 2)
         
-        self.fc1 = nn.Linear(in_features = 128, out_features = 600)
+        self.fc1 = nn.Linear(in_features = 392, out_features = 600)
         self.dropout = nn.Dropout(p=0.2)
-        self.fc2 = nn.Linear(in_features = 600, out_features = 10) #vocab_size
+        self.fc2 = nn.Linear(in_features = 600, out_features = 40) # 40 = batch_size * n_class
 
 
         # ===== Attention Layer ==== #
@@ -90,6 +90,7 @@ class Embedding_Attention(nn.Module):
         #print(out.shape)
         dim = np.prod(out.shape)
         out = out.view(-1, dim)
+        #print(dim) # current 128
         out = self.fc1(out)
         out = self.relu(out)
         out = self.dropout(out)

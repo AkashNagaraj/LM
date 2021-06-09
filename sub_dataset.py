@@ -49,7 +49,7 @@ def choose_set(lines,split):
 
 
 def choose_sentences():
-    data_dir = "../Dataset/ptbdataset/ptb.char.train.txt" # File is only 1.2mb
+    data_dir = "data/ptbdataset/ptb.char.train.txt" # File is only 1.2mb
     lines = open(data_dir,'r').readlines()
     lines = preprocess(lines)
     open(data_dir,'r').close()

@@ -10,7 +10,7 @@ def train_model(data, vocab_size, embedding_size, context_size, device):
     model = Embedding_Attention(len(vocab_size), embedding_size, context_size, 1).to(device)
     optimizer = optim.SGD(model.parameters(), lr=0.0001)
 
-    for epoch in range(10):
+    for epoch in range(5):
         total_loss = 0
         for mini_batch in data:
             target = torch.tensor(mini_batch[0], dtype=torch.long).to(device)
@@ -28,11 +28,15 @@ def train_model(data, vocab_size, embedding_size, context_size, device):
 
             # ===== Loss Function ==== #
             #print("cnn_loss:{}, target_loss:{}, context_loss:{}".format(cnn_loss.data.shape,target_loss.data.shape,context_loss.data.shape))
-            total_loss = cnn_loss + target_loss + context_loss
-            epoch_loss = loss_function(total_loss, labels)
-            epoch_loss.backward()
+            loss = cnn_loss + target_loss + context_loss
+            loss = loss.reshape(20,-1)
+            loss = loss_function(loss, labels)
+            loss.backward()
             optimizer.step()
-            print(epoch_loss.item())
+            total_loss += loss.item()
+        print(total_loss)
+        losses.append(total_loss)
+    print(losses)
     """
             # ==== Self attention of combine embeddings ==== #
             out = model.attention(target).to(device)
@@ -42,7 +46,6 @@ def train_model(data, vocab_size, embedding_size, context_size, device):
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
-            print(total_loss)
         losses.append(total_loss)
     print(losses)
     """
@@ -52,14 +55,14 @@ def main():
     lines , freq_count, dict_ = choose_sentences() # Choose 1000 sentences with most chars and highest char frequency 
     data_vector, char_dict, window = build_char_data(lines, dict_, test=True)  
 
-    batch_size = 10
+    batch_size = 20
     remainder = len(data_vector)%batch_size
     padding_data = [([char_dict['S']],[char_dict['E']],[0]) for i in range(0,abs(batch_size-remainder))]
     data_vector = data_vector + padding_data
     data = build_batch(data_vector,batch_size)  
 
     embed_size = 150
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
     train_model(data, char_dict, embed_size, batch_size, device)
     """
     new_embedding_ch = self_attention(embedding_ch)

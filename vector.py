@@ -68,5 +68,5 @@ def convert_to_vec(lines, char_dict):
 def build_char_data(lines,char_dict,test=False):
     data, char_dict, window = convert_to_vec(lines, char_dict)
     if(test):
-        data = data[20:50]
+        data = data[:50]
     return data, char_dict, window
