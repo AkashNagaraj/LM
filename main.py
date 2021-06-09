@@ -10,7 +10,7 @@ def train_model(data, vocab_size, embedding_size, context_size, device):
     model = Embedding_Attention(len(vocab_size), embedding_size, context_size, 1).to(device)
     optimizer = optim.SGD(model.parameters(), lr=0.0001)
 
-    for epoch in range(5):
+    for epoch in range(10):
         total_loss = 0
         for mini_batch in data:
             target = torch.tensor(mini_batch[0], dtype=torch.long).to(device)

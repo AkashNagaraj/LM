@@ -13,7 +13,8 @@ class Embedding_Attention(nn.Module):
         # ==== Embedding Layer ===== #
         self.context_size = cont_size
         self.vocab_size = vocab_size
-        self.embeddings = nn.Embedding(vocab_size, emb_dim)
+        self.embeddings = nn.Embedding(vocab_size, emb_dim, scale_grad_by_freq=True)
+        
         self.linear1 = nn.Linear(cont_size*emb_dim, 128)
         self.linear2 = nn.Linear(128, 40) # 40 = batch_size * n_class
 
