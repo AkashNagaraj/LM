@@ -29,7 +29,7 @@ def create_line(line):
 
 def context_target(vector,window):
     rand = window*2
-    data, line_data = [],[]
+    d_true, d_false, line_data = [],[],[]
     for i in range(window,len(vector)-window):
         # True targets
         current = vector[i]
@@ -41,9 +41,13 @@ def context_target(vector,window):
         # False targets
         false_ = [([current],[vector[random.randint(i+window+1,len(vector)-window)]],[0]) for i in range(rand)]        
         
-        data = true_ + false_
-        for val in data:
-            line_data.append(val)
+        for val in true_:
+            d_true.append(val)
+        for val in false_:
+            d_false.append(val)
+
+    print(len(d_true), len(d_false))
+    line_data = d_true + d_false 
     return line_data
 
 
@@ -68,5 +72,5 @@ def convert_to_vec(lines, char_dict):
 def build_char_data(lines,char_dict,test=False):
     data, char_dict, window = convert_to_vec(lines, char_dict)
     if(test):
-        data = data[:100]
+        data = data[:20]
     return data, char_dict, window

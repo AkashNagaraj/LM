@@ -60,14 +60,9 @@ def main():
     padding_data = [([char_dict['S']],[char_dict['E']],[0]) for i in range(0,abs(batch_size-remainder))]
     data_vector = data_vector + padding_data
     data = build_batch(data_vector,batch_size)  
-
     embed_size = 150
     device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
     train_model(data, char_dict, embed_size, batch_size, device)
-    """
-    new_embedding_ch = self_attention(embedding_ch)
-    convolution(new_embedding_ch)
-    """
 
 
 if __name__=="__main__":
