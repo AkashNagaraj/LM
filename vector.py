@@ -29,7 +29,7 @@ def create_line(line):
 
 def context_target(vector,window):
     rand = window*2
-    d_true, d_false, line_data = [],[],[]
+    d_true, d_false, data, line_data = [],[],[],[]
     for i in range(window,len(vector)-window):
         # True targets
         current = vector[i]
@@ -40,20 +40,26 @@ def context_target(vector,window):
         
         # False targets
         false_ = [([current],[vector[random.randint(i+window+1,len(vector)-window)]],[0]) for i in range(rand)]        
-        
+       
         for val in true_:
             d_true.append(val)
         for val in false_:
             d_false.append(val)
 
-    print(len(d_true), len(d_false))
+    #print(len(d_true), len(d_false))
     line_data = d_true + d_false 
+    """
+        data = false_ + true_
+        for val in data:
+            data.append(val)
+    line_data = data
+    """
     return line_data
 
 
 def convert_to_vec(lines, char_dict):
     window = 2 # Change if needed
-    dict_ = {'S':0,'E':1,'M':2,'U':3} # start, end, mask and unknown values
+    dict_ = {'S':2,'E':3,'M':4,'U':5} # start, end, mask and unknown values
     for idx, val in enumerate(char_dict.keys()):
         dict_[val]=idx+4
     dict_['_'] = len(dict_)
@@ -72,5 +78,5 @@ def convert_to_vec(lines, char_dict):
 def build_char_data(lines,char_dict,test=False):
     data, char_dict, window = convert_to_vec(lines, char_dict)
     if(test):
-        data = data[:20]
+        data = data[:50]
     return data, char_dict, window
